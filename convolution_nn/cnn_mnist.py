@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env/python
 from __future__ import absolute_import
 from __futrue__ import division
 from __future__ import print_function
@@ -43,7 +42,7 @@ def cnn_model_fn(features, labels, mode):
     pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 64])
     dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
     dropout= tf.layers.dropout(
-        inputs=dense, rate-0.4, training=mode == learn.ModeKeys.TRAIN)
+        inputs=dense, rate=0.4, training=mode == learn.ModeKeys.TRAIN)
 
     # Logits Layer
     logits = tf.layers.dense(inputs=dropout, units=10)
@@ -68,14 +67,51 @@ def cnn_model_fn(features, labels, mode):
     # Generate Predictions
     predictions = {
         "classes": tf.argmax(
-            input=logits, axis=1)
+            input=logits, axis=1),
         "probabilities": tf.nn.softmax(
             logits, name="softmax_tensor")
-    )
+        }
 
     # Return a ModelFnOps object
     return model_fn_lib.ModelFnOps(
         mode=mode, predictions=predictions, loss=loss, train_op=train_op)
+
+def main(unused_argv):
+    # Load training and eval data
+    mnist = learn.datasets.load_dataset("mnist")
+    train_data = mnist.train.images # Returns np.array
+    train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
+    eval_data = mnist.test.images # Returns np.array
+    eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
+
+    # Create the Estimator
+    mnist_classifier = learn.Estimator(
+        model_fn=cnn_model_fn, model_dir="/global/homes/k/kristia/tf_work/TensorFlowPractice/convolution_nn/checkpoints")
+    
+    # Set up logging for predictions
+    tensors_to_log = {"probabilities": "softmax_tensor"}
+    logging_hook = tf.train.LoggingTensorHook(
+        tensors=tensors_to_log, every_n_inter=50)
+
+    # Train the model
+    mnist_classifier.fit(
+        x=train_data,
+        y=train_labels,
+        batch_size=100,
+        steps=20000,
+        monitors=[logging_hook])
+
+    # Configure the accuracy metric for evaluation
+    metrics = {
+        "accuracy":
+            learn.MetricSpec(
+                metric_fn=tf.metrics.accuracy, prediction_key="classes"),
+    }
+
+    # Evaluate the model and print results
+    eval_results = mnist_classifier.evaluate(
+        x=eval_data, y=eval_labels, metrics=metrics)
+    print(eval_results)
 
 if __name__ == "__main__":
     tf.app.run()
