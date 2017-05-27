@@ -1,6 +1,7 @@
 #!/usr/bin/env/python
+
 from __future__ import absolute_import
-from __futrue__ import division
+from __future__ import division
 from __future__ import print_function
 
 #Imports
@@ -8,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.contrib import learn
-from tensorflow.conrtib.learn.python.learn.estimators import model_fn as model_fn_lib
+from tensorflow.contrib.learn.python.learn.estimators import model_fn as model_fn_lib
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -53,7 +54,7 @@ def cnn_model_fn(features, labels, mode):
     # Calculate Lass (for both TRAIN and EVAL modes)
     if mode != learn.ModeKeys.INFER:
         onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=10)
-        loss = tf.lossess.softmax_cross_entropy(
+        loss = tf.losses.softmax_cross_entropy(
             onehot_labels=onehot_labels, logits=logits)
     
     # Configure the Training Op (for TRAIN mode)
@@ -91,7 +92,7 @@ def main(unused_argv):
     # Set up logging for predictions
     tensors_to_log = {"probabilities": "softmax_tensor"}
     logging_hook = tf.train.LoggingTensorHook(
-        tensors=tensors_to_log, every_n_inter=50)
+        tensors=tensors_to_log, every_n_iter=50)
 
     # Train the model
     mnist_classifier.fit(
