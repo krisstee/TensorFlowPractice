@@ -9,7 +9,7 @@ from keras.utils import np_utils
 #from keras.utils.visualize_util import plot
 import random
 import numpy as np
-#import cv2
+import cv2
 from PIL import Image
 import tensorflow as tf
 
@@ -29,11 +29,11 @@ def one_hot_encode (label) :
     return np_utils.to_categorical(np.int32(list(label)), 10)
 
 # @NOTE: EDIT TO ORIGINAL CODE
-def load_image(infilename):
-    img = Image.open(infilename)
-    img.load()
-    img_data = np.asarray(img,dtype=np.float32)
-    return img_data
+#def load_image(infilename):
+#    img = Image.open(infilename)
+#    img.load()
+#    img_data = np.asarray(img,dtype=np.float32)
+#    return img_data
 
 def load_data(path,train_ratio):
     datas = []
@@ -41,14 +41,19 @@ def load_data(path,train_ratio):
 #    input_file = open(path + 'labels.txt')
     # @NOTE: EDIT TO ORIGINAL CODE
     input_file = open('captcha4_level1/labels.txt')
+    # @NOTE: Edit to orignal code
     for i,line in enumerate(input_file):
         img = Image.open(path + str(i) + ".png")
         data = img.resize([WIDTH,HEIGHT])
         data = np.multiply(data, 1/255.0)
         data = np.asarray(data)
+        # @NOTE: EDIT TO ORIGINAL CODE
+        datas = list(datas)
         datas.append(data)
+        # @NOTE: EDIT TO ORINGAL CODE
+        labels = list(labels)
         labels.append(one_hot_encode(line.strip()))
-        input_file.close()
+#        input_file.close()
         datas_labels = zip(datas,labels)
         # @NOTE: EDIT TO ORIGINAL CODE
         datas_labels = list(datas_labels)
@@ -58,11 +63,13 @@ def load_data(path,train_ratio):
         train_size = int(size * train_ratio)
         # @NOTE: EDIT TO ORIGINAL CODE
         datas_array = np.array(datas)
+        # @NOTE: EDIT TO ORIGINAL CODE
         labels_array = np.array(labels)
 #        train_datas = np.stack(datas[ 0 : train_size ])
 #        train_labels = np.stack(labels[ 0 : train_size ])
 #        test_datas = np.stack(datas[ train_size : size ])
 #        test_labels = np.stack(labels[ train_size : size])
+        # @NOTE: Above commented code passed empty arrays, unable to use np.stack
         if(train_size == 0):
             train_datas = np.stack(datas_array)
             train_labels = np.stack(labels_array)
@@ -73,7 +80,11 @@ def load_data(path,train_ratio):
             train_labels = np.stack(labels_array[ 0 : train_size ])
             test_datas = np.stack(datas_array[ train_size : size ])
             test_labels = np.stack(labels_array[ train_size : size])
-        return (train_datas,train_labels,test_datas,test_labels)
+        # @NOTE: Edit to orignal code
+        print(" =======> iteration: ", i)
+    # @NOTE: EDIT TO ORIGINAL CODE
+    input_file.close()
+    return (train_datas,train_labels,test_datas,test_labels)
 
 def get_cnn_net():
     inputs = Input(shape=(HEIGHT, WIDTH, CHANNEL))
@@ -137,13 +148,13 @@ print('y4',(y4.sum()) *1.0/test_size)
 # the following is an example to check how well your model can predict new un-seen information
 
 for i in range(0,9):
-#    chal_img = cv2.imread('captcha_data/level_1/captcha4_level1/'+ str(i) + ".png")
-    chal_img = load_image('captcha_data/level_1/captcha4_level1/'+ str(i) + ".png")
-#    resized_image = cv2.resize(chal_img, (WIDTH, HEIGHT)).astype(np.float32)
-#    resized_image = np.expand_dims(resized_image, axis=0)
-    # @NOTE: EDIT TO ORIGINAL CODE
-    resized_image = np.resize(chal_img,(60,160,3))
+    chal_img = cv2.imread('captcha_data/level_1/captcha4_level1'+ str(i) + ".png")
+#    chal_img = load_image('captcha_data/level_1/captcha4_level1/'+ str(i) + ".png")
+    resized_image = cv2.resize(chal_img, (WIDTH, HEIGHT)).astype(np.float32)
     resized_image = np.expand_dims(resized_image, axis=0)
+    # @NOTE: EDIT TO ORIGINAL CODE
+#    resized_image = np.resize(chal_img,(60,160,3))
+#    resized_image = np.expand_dims(resized_image, axis=0)
     out = model.predict(resized_image)		
     best_guess = np.argmax(out)
 
